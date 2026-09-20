@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../BuildingBlocks/MobilityFinance.Contracts/MobilityFinance.Contracts.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/MobilityFinance.ServiceDefaults/MobilityFinance.ServiceDefaults.csproj" />
+    <ProjectReference Include="../MobilityFinance.Origination.Domain/MobilityFinance.Origination.Domain.csproj" />
   </ItemGroup>
 
 </Project>

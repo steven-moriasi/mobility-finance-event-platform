@@ -16,6 +16,7 @@
   </Folder>
   <Folder Name="/src/Services/Origination/">
     <Project Path="src/Services/Origination/MobilityFinance.Origination.Api/MobilityFinance.Origination.Api.csproj" />
+    <Project Path="src/Services/Origination/MobilityFinance.Origination.Domain/MobilityFinance.Origination.Domain.csproj" />
   </Folder>
   <Folder Name="/src/Web/">
     <Project Path="src/Web/MobilityFinance.Web/MobilityFinance.Web.csproj" />
@@ -29,6 +30,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MobilityFinance.Architecture.Tests/MobilityFinance.Architecture.Tests.csproj" />
+    <Project Path="tests/MobilityFinance.Origination.Tests/MobilityFinance.Origination.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Web.Tests/MobilityFinance.Web.Tests.csproj" />
   </Folder>
 </Solution>
