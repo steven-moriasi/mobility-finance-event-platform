@@ -1,9 +1,19 @@
 @MobilityFinance.Origination.Api_HostAddress = http://localhost:5151
 
-GET {{MobilityFinance.Origination.Api_HostAddress}}/health/ready
-Accept: application/json
+POST {{MobilityFinance.Origination.Api_HostAddress}}/applications
+Content-Type: application/json
+
+{
+  "applicantReference": "SYNTH-1001",
+  "market": "KE",
+  "currency": "KES",
+  "assetPrice": 250000,
+  "deposit": 30000,
+  "termWeeks": 52,
+  "weeklyIncome": 12000
+}
 
 ###
 
-GET {{MobilityFinance.Origination.Api_HostAddress}}/_system
+GET {{MobilityFinance.Origination.Api_HostAddress}}/applications
 Accept: application/json
