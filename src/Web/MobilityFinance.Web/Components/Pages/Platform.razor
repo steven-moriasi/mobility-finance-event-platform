@@ -14,12 +14,16 @@
 <section class="content-grid">
     <article class="panel">
         <p class="eyebrow">Messaging</p>
-        <h2>Dead-letter control</h2>
-        <p class="muted">Replay remains explicit, authorized, and audited.</p>
+        <h2>Recovery controls</h2>
+        <p class="muted">Broker outage recovery is executable and replay remains explicit, authorized, and audited.</p>
     </article>
     <article class="panel">
         <p class="eyebrow">Observability</p>
         <h2>Cross-service traces</h2>
-        <p class="muted">Trace links will preserve context across HTTP and asynchronous delivery.</p>
+        <p class="muted">OpenTelemetry exports HTTP and runtime signals to the local Prometheus, Tempo, and Grafana stack.</p>
+        <div class="panel-actions">
+            <a class="button button-secondary" href="http://localhost:3000" target="_blank" rel="noopener noreferrer">Open Grafana</a>
+            <a class="button button-secondary" href="http://localhost:9090" target="_blank" rel="noopener noreferrer">Open Prometheus</a>
+        </div>
     </article>
 </section>
