@@ -1,0 +1,156 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  registry: ghcr.io/steven-moriasi
+  pullPolicy: IfNotPresent
+  tag: latest
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  name: ""
+  workloadIdentity:
+    enabled: false
+    clientId: ""
+    tenantId: ""
+
+serviceBus:
+  fullyQualifiedNamespace: ""
+  eventsTopic: mobility-events
+
+telemetry:
+  otlpEndpoint: http://otel-collector.observability.svc.cluster.local:4317
+
+components:
+  web:
+    image: mobility-finance-web
+    replicas: 2
+    http: true
+    service: true
+    serviceBus: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPUUtilizationPercentage: 70
+  origination-api:
+    image: mobility-finance-origination-api
+    replicas: 2
+    http: true
+    service: true
+    serviceBus: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  ledger-api:
+    image: mobility-finance-ledger-api
+    replicas: 2
+    http: true
+    service: true
+    serviceBus: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  assets-api:
+    image: mobility-finance-assets-api
+    replicas: 2
+    http: true
+    service: true
+    serviceBus: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  operations-api:
+    image: mobility-finance-operations-api
+    replicas: 2
+    http: true
+    service: true
+    serviceBus: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  activation-worker:
+    image: mobility-finance-activation-worker
+    replicas: 2
+    http: true
+    service: true
+    serviceBus: true
+    subscription: activation-workflows
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  projections-worker:
+    image: mobility-finance-projections-worker
+    replicas: 1
+    http: false
+    service: false
+    serviceBus: false
+    resources:
+      requests:
+        cpu: 50m
+        memory: 96Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  host: mobility-finance.example.com
+  tls: []
+
+networkPolicy:
+  enabled: true
+
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+topologySpreadConstraints:
+  enabled: true
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

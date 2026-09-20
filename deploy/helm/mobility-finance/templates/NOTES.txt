@@ -1,0 +1,9 @@
+The Mobility Finance services have been installed.
+
+{{- if .Values.ingress.enabled }}
+Web application: https://{{ .Values.ingress.host }}
+{{- else }}
+Run:
+  kubectl port-forward service/{{ include "mobility-finance.fullname" . }}-web 8080:8080
+Then open http://localhost:8080.
+{{- end }}

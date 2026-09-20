@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "image",
+    "serviceAccount",
+    "serviceBus",
+    "telemetry",
+    "components"
+  ],
+  "properties": {
+    "image": {
+      "type": "object",
+      "required": ["registry", "pullPolicy", "tag"],
+      "properties": {
+        "registry": {"type": "string", "minLength": 1},
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"]
+        },
+        "tag": {"type": "string", "minLength": 1}
+      }
+    },
+    "serviceAccount": {
+      "type": "object",
+      "required": ["create", "workloadIdentity"],
+      "properties": {
+        "create": {"type": "boolean"},
+        "name": {"type": "string"},
+        "workloadIdentity": {
+          "type": "object",
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "clientId": {"type": "string"},
+            "tenantId": {"type": "string"}
+          }
+        }
+      }
+    },
+    "serviceBus": {
+      "type": "object",
+      "required": ["fullyQualifiedNamespace", "eventsTopic"],
+      "properties": {
+        "fullyQualifiedNamespace": {"type": "string"},
+        "eventsTopic": {"type": "string", "minLength": 1}
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "required": ["otlpEndpoint"],
+      "properties": {
+        "otlpEndpoint": {"type": "string", "minLength": 1}
+      }
+    },
+    "components": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "image",
+          "replicas",
+          "http",
+          "service",
+          "serviceBus",
+          "resources"
+        ],
+        "properties": {
+          "image": {"type": "string", "minLength": 1},
+          "replicas": {"type": "integer", "minimum": 1},
+          "http": {"type": "boolean"},
+          "service": {"type": "boolean"},
+          "serviceBus": {"type": "boolean"},
+          "subscription": {"type": "string"},
+          "env": {
+            "type": "object",
+            "additionalProperties": {"type": "string"}
+          },
+          "resources": {"type": "object"},
+          "autoscaling": {"type": "object"}
+        }
+      }
+    }
+  }
+}

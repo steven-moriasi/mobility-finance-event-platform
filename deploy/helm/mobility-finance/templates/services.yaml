@@ -1,0 +1,22 @@
+{{- range $name, $component := .Values.components }}
+{{- if $component.service }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mobility-finance.fullname" $ }}-{{ $name }}
+  labels:
+    {{- include "mobility-finance.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "mobility-finance.selectorLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+{{- end }}
+{{- end }}
