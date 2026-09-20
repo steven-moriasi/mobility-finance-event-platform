@@ -1,0 +1,8 @@
+.git
+.github
+.packages
+**/bin
+**/obj
+TestResults
+artifacts
+coverage

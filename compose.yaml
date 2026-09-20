@@ -1,0 +1,72 @@
+name: mobility-finance
+
+x-app: &app
+  restart: unless-stopped
+  environment:
+    ASPNETCORE_ENVIRONMENT: Development
+
+services:
+  web:
+    <<: *app
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        PROJECT_PATH: src/Web/MobilityFinance.Web/MobilityFinance.Web.csproj
+        APP_DLL: MobilityFinance.Web.dll
+    ports:
+      - "8080:8080"
+
+  origination-api:
+    <<: *app
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        PROJECT_PATH: src/Services/Origination/MobilityFinance.Origination.Api/MobilityFinance.Origination.Api.csproj
+        APP_DLL: MobilityFinance.Origination.Api.dll
+
+  ledger-api:
+    <<: *app
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        PROJECT_PATH: src/Services/Ledger/MobilityFinance.Ledger.Api/MobilityFinance.Ledger.Api.csproj
+        APP_DLL: MobilityFinance.Ledger.Api.dll
+
+  assets-api:
+    <<: *app
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        PROJECT_PATH: src/Services/Assets/MobilityFinance.Assets.Api/MobilityFinance.Assets.Api.csproj
+        APP_DLL: MobilityFinance.Assets.Api.dll
+
+  operations-api:
+    <<: *app
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        PROJECT_PATH: src/Services/Operations/MobilityFinance.Operations.Api/MobilityFinance.Operations.Api.csproj
+        APP_DLL: MobilityFinance.Operations.Api.dll
+
+  activation-worker:
+    <<: *app
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        PROJECT_PATH: src/Workers/Activation/MobilityFinance.Activation.Worker/MobilityFinance.Activation.Worker.csproj
+        APP_DLL: MobilityFinance.Activation.Worker.dll
+
+  projections-worker:
+    <<: *app
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        PROJECT_PATH: src/Workers/Projections/MobilityFinance.Projections.Worker/MobilityFinance.Projections.Worker.csproj
+        APP_DLL: MobilityFinance.Projections.Worker.dll

@@ -22,6 +22,7 @@ TestResults/
 coverage/
 artifacts/
 BenchmarkDotNet.Artifacts/
+.packages/
 
 # Local runtime data
 .data/
