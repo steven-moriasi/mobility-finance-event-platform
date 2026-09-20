@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using MobilityFinance.Contracts;
+using MobilityFinance.Messaging;
 using MobilityFinance.Origination.Api.Infrastructure;
 using MobilityFinance.Origination.Domain;
 
@@ -76,15 +78,31 @@ public static class OriginationEndpoints
                 Guid id,
                 AcceptOfferRequest request,
                 InMemoryOriginationRepository repository,
-                TimeProvider timeProvider) =>
+                TimeProvider timeProvider,
+                InMemoryEventOutbox outbox) =>
             {
                 try
                 {
+                    DateTimeOffset now = timeProvider.GetUtcNow();
                     FinancingAgreement agreement = repository.Update(
                         id,
                         application => application.AcceptOffer(
                             request.OfferId,
-                            timeProvider.GetUtcNow()));
+                            now));
+                    outbox.Enqueue(
+                        IntegrationEventFactory.Create(
+                            IntegrationEventTypes.AgreementCreated,
+                            agreement.Id.ToString(),
+                            aggregateSequence: 1,
+                            agreement.Id,
+                            causationId: null,
+                            now,
+                            new AgreementCreatedEvent(
+                                agreement.Id,
+                                agreement.ApplicationId,
+                                agreement.ApplicantReference,
+                                agreement.DepositRequired.Amount,
+                                agreement.Currency)));
 
                     return Results.Ok(ToResponse(agreement));
                 }

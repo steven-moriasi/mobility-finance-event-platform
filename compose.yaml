@@ -6,6 +6,25 @@ x-app: &app
     ASPNETCORE_ENVIRONMENT: Development
 
 services:
+  servicebus-database:
+    image: mcr.microsoft.com/mssql/server:2022-CU26-ubuntu-22.04
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Local-ServiceBus-Password-2026!"
+
+  servicebus-emulator:
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:2.0.1
+    volumes:
+      - ./deploy/servicebus/config.json:/ServiceBus_Emulator/ConfigFiles/Config.json:ro
+    environment:
+      ACCEPT_EULA: "Y"
+      SQL_SERVER: servicebus-database
+      MSSQL_SA_PASSWORD: "Local-ServiceBus-Password-2026!"
+      EMULATOR_HTTP_PORT: "5300"
+      SQL_WAIT_INTERVAL: "15"
+    depends_on:
+      - servicebus-database
+
   web:
     <<: *app
     environment:
@@ -23,21 +42,33 @@ services:
 
   origination-api:
     <<: *app
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ServiceBus__ConnectionString: Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      ServiceBus__EventsTopic: mobility-events
     build:
       context: .
       dockerfile: deploy/docker/Dockerfile
       args:
         PROJECT_PATH: src/Services/Origination/MobilityFinance.Origination.Api/MobilityFinance.Origination.Api.csproj
         APP_DLL: MobilityFinance.Origination.Api.dll
+    depends_on:
+      - servicebus-emulator
 
   ledger-api:
     <<: *app
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ServiceBus__ConnectionString: Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      ServiceBus__EventsTopic: mobility-events
     build:
       context: .
       dockerfile: deploy/docker/Dockerfile
       args:
         PROJECT_PATH: src/Services/Ledger/MobilityFinance.Ledger.Api/MobilityFinance.Ledger.Api.csproj
         APP_DLL: MobilityFinance.Ledger.Api.dll
+    depends_on:
+      - servicebus-emulator
 
   assets-api:
     <<: *app
@@ -59,12 +90,19 @@ services:
 
   activation-worker:
     <<: *app
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ServiceBus__ConnectionString: Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      ServiceBus__EventsTopic: mobility-events
+      ServiceBus__Subscription: activation-workflows
     build:
       context: .
       dockerfile: deploy/docker/Dockerfile
       args:
         PROJECT_PATH: src/Workers/Activation/MobilityFinance.Activation.Worker/MobilityFinance.Activation.Worker.csproj
         APP_DLL: MobilityFinance.Activation.Worker.dll
+    depends_on:
+      - servicebus-emulator
 
   projections-worker:
     <<: *app

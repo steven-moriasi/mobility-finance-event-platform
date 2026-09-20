@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using MobilityFinance.Contracts;
 using MobilityFinance.Ledger.Api.Infrastructure;
 using MobilityFinance.Ledger.Domain;
+using MobilityFinance.Messaging;
 
 namespace MobilityFinance.Ledger.Api.Accounts;
 
@@ -67,10 +69,19 @@ public static class LedgerEndpoints
                 Guid id,
                 RecordPaymentRequest request,
                 InMemoryLedgerRepository repository,
-                TimeProvider timeProvider) =>
+                TimeProvider timeProvider,
+                InMemoryEventOutbox outbox) =>
             {
                 try
                 {
+                    FinancingLedgerAccount? existing = repository.Get(id);
+                    if (existing is null)
+                    {
+                        return Results.NotFound();
+                    }
+
+                    bool depositWasSatisfied =
+                        existing.Balance.DepositSatisfied;
                     PaymentReceipt receipt = repository.Update(
                         id,
                         account => account.RecordPayment(
@@ -78,6 +89,16 @@ public static class LedgerEndpoints
                             request.ProviderTransactionId,
                             Money(request.Amount, request.Currency),
                             timeProvider.GetUtcNow()));
+                    FinancingLedgerAccount updated = repository.Get(id)!;
+                    if (!receipt.IsDuplicate)
+                    {
+                        EnqueuePaymentEvents(
+                            updated,
+                            receipt.Payment,
+                            !depositWasSatisfied
+                                && updated.Balance.DepositSatisfied,
+                            outbox);
+                    }
                     PaymentResponse response = MapPayment(receipt.Payment);
 
                     return receipt.IsDuplicate
@@ -162,6 +183,66 @@ public static class LedgerEndpoints
                 account.Balance.Settled),
             account.Payments.Select(MapPayment).ToArray(),
             account.Transactions.Select(MapTransaction).ToArray());
+    }
+
+    private static void EnqueuePaymentEvents(
+        FinancingLedgerAccount account,
+        PaymentRecord payment,
+        bool depositWasSatisfied,
+        InMemoryEventOutbox outbox)
+    {
+        long aggregateSequence = account.Transactions.Count;
+        IntegrationEventEnvelope paymentRecorded =
+            IntegrationEventFactory.Create(
+                IntegrationEventTypes.PaymentRecorded,
+                account.AgreementId.ToString(),
+                aggregateSequence,
+                account.AgreementId,
+                causationId: null,
+                payment.ReceivedAtUtc,
+                new PaymentRecordedEvent(
+                    account.AgreementId,
+                    account.Id,
+                    payment.Id,
+                    payment.Provider,
+                    payment.ProviderTransactionId,
+                    payment.Amount.Amount,
+                    payment.Amount.Currency));
+        outbox.Enqueue(paymentRecorded);
+        outbox.Enqueue(
+            IntegrationEventFactory.Create(
+                IntegrationEventTypes.RepaymentAllocated,
+                account.AgreementId.ToString(),
+                aggregateSequence,
+                account.AgreementId,
+                paymentRecorded.MessageId,
+                payment.ReceivedAtUtc,
+                new RepaymentAllocatedEvent(
+                    account.AgreementId,
+                    account.Id,
+                    payment.Id,
+                    payment.DepositApplied.Amount,
+                    payment.RepaymentApplied.Amount,
+                    payment.CustomerCredit.Amount,
+                    payment.Amount.Currency)));
+
+        if (depositWasSatisfied)
+        {
+            outbox.Enqueue(
+                IntegrationEventFactory.Create(
+                    IntegrationEventTypes.DepositRecorded,
+                    account.AgreementId.ToString(),
+                    aggregateSequence,
+                    account.AgreementId,
+                    paymentRecorded.MessageId,
+                    payment.ReceivedAtUtc,
+                    new DepositRecordedEvent(
+                        account.AgreementId,
+                        account.Id,
+                        payment.Id,
+                        account.DepositRequired.Amount,
+                        account.DepositRequired.Currency)));
+        }
     }
 
     private static PaymentResponse MapPayment(PaymentRecord payment)
