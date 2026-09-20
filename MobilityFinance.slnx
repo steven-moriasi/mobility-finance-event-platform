@@ -31,6 +31,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MobilityFinance.Architecture.Tests/MobilityFinance.Architecture.Tests.csproj" />
+    <Project Path="tests/MobilityFinance.Ledger.Tests/MobilityFinance.Ledger.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Origination.Tests/MobilityFinance.Origination.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Web.Tests/MobilityFinance.Web.Tests.csproj" />
   </Folder>
