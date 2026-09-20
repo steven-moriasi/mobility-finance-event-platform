@@ -1,0 +1,11 @@
+@page "/access-denied"
+@attribute [Authorize]
+
+<PageTitle>Access denied | Mobility Finance</PageTitle>
+
+<section class="empty-state">
+    <span class="empty-state-code">403</span>
+    <h1>This workspace is outside your role.</h1>
+    <p>Your account is authenticated, but the requested action requires a different platform policy.</p>
+    <a class="button button-primary" href="/">Return to overview</a>
+</section>

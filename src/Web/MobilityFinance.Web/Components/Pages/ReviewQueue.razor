@@ -1,0 +1,16 @@
+@page "/review"
+@attribute [Authorize(Policy = AuthorizationPolicies.ReviewWork)]
+
+<PageTitle>Review queue | Mobility Finance</PageTitle>
+
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Reviewer workspace</p>
+        <h1>Manual review queue</h1>
+        <p>Resolve workflow exceptions and approve sensitive simulated commands with an explicit reason.</p>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="table-placeholder">Timeouts, compensations, and approval cases will be projected here.</div>
+</section>

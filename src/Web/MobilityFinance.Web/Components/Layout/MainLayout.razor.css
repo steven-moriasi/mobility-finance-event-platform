@@ -1,3 +1,51 @@
+header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+nav {
+    display: grid;
+    gap: .35rem;
+}
+
+nav ::deep a {
+    border-radius: .65rem;
+    color: var(--color-ink-muted);
+    font-size: .92rem;
+    font-weight: 650;
+    padding: .72rem .85rem;
+    text-decoration: none;
+}
+
+nav ::deep a:hover {
+    background: var(--color-surface-raised);
+    color: var(--color-ink);
+}
+
+nav ::deep a.active {
+    background: var(--color-brand-soft);
+    color: var(--color-brand-dark);
+}
+
+#blazor-error-ui {
+    background: #7f1d1d;
+    bottom: 0;
+    box-shadow: 0 -1px 8px rgb(0 0 0 / 24%);
+    color: white;
+    display: none;
+    left: 0;
+    padding: .75rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 1rem;
+}
 #blazor-error-ui {
     color-scheme: light only;
     background: lightyellow;

@@ -1,0 +1,23 @@
+@page "/applications"
+@attribute [Authorize(Policy = AuthorizationPolicies.OperatorWork)]
+
+<PageTitle>Origination | Mobility Finance</PageTitle>
+
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Operator workspace</p>
+        <h1>Financing origination</h1>
+        <p>Create applications, price versioned offers, and follow explicit agreement state transitions.</p>
+    </div>
+    <button class="button button-primary" type="button">New application</button>
+</section>
+
+<section class="panel">
+    <div class="panel-heading">
+        <h2>Application pipeline</h2>
+        <span class="badge">Foundation view</span>
+    </div>
+    <div class="table-placeholder">
+        Origination records will appear here when the domain service is connected.
+    </div>
+</section>

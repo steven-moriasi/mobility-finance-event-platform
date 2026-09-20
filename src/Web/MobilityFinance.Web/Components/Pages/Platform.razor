@@ -1,0 +1,25 @@
+@page "/platform"
+@attribute [Authorize(Policy = AuthorizationPolicies.PlatformAdministration)]
+
+<PageTitle>Platform operations | Mobility Finance</PageTitle>
+
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Platform administration</p>
+        <h1>Delivery and service operations</h1>
+        <p>Inspect service health, dead letters, replay controls, SLOs, dashboards, and traces.</p>
+    </div>
+</section>
+
+<section class="content-grid">
+    <article class="panel">
+        <p class="eyebrow">Messaging</p>
+        <h2>Dead-letter control</h2>
+        <p class="muted">Replay remains explicit, authorized, and audited.</p>
+    </article>
+    <article class="panel">
+        <p class="eyebrow">Observability</p>
+        <h2>Cross-service traces</h2>
+        <p class="muted">Trace links will preserve context across HTTP and asynchronous delivery.</p>
+    </article>
+</section>

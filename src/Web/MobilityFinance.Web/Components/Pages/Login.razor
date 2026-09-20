@@ -1,0 +1,76 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Sign in | Mobility Finance</PageTitle>
+
+<div class="login-shell">
+    <section class="login-context">
+        <p class="eyebrow">Mobility Finance Event Platform</p>
+        <h1>Operate the complete financing lifecycle from one secure workspace.</h1>
+        <p>Role-specific access keeps origination, review, and platform controls behind explicit server-side policies.</p>
+        <ul>
+            <li>Versioned financing and agreement workflows</li>
+            <li>Immutable repayment and reversal history</li>
+            <li>Audited review, replay, and asset operations</li>
+        </ul>
+    </section>
+
+    <section class="login-card">
+        <div>
+            <p class="eyebrow">Local development</p>
+            <h2>Sign in</h2>
+            <p class="muted">Use one of the seeded synthetic accounts.</p>
+        </div>
+
+        @if (Error == "invalid")
+        {
+            <div class="alert alert-error" role="alert">
+                The email or password was not recognized.
+            </div>
+        }
+
+        <form method="post" action="/auth/login" class="form-stack">
+            <AntiforgeryToken />
+            <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+            <label>
+                <span>Email</span>
+                <input name="email" type="email" autocomplete="username" required />
+            </label>
+            <label>
+                <span>Password</span>
+                <input name="password" type="password" autocomplete="current-password" required />
+            </label>
+            <button class="button button-primary button-block" type="submit">Sign in</button>
+        </form>
+
+        <details class="demo-accounts">
+            <summary>Demo account credentials</summary>
+            <dl>
+                <div><dt>Operator</dt><dd>operator@mobility.local / Operator!2026</dd></div>
+                <div><dt>Reviewer</dt><dd>reviewer@mobility.local / Reviewer!2026</dd></div>
+                <div><dt>Administrator</dt><dd>admin@mobility.local / Admin!2026</dd></div>
+            </dl>
+        </details>
+    </section>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authenticationState =
+            await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        if (authenticationState.User.Identity?.IsAuthenticated is true)
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+}

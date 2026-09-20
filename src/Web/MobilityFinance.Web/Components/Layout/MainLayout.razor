@@ -1,9 +1,94 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<div class="app-shell">
+    <header class="topbar">
+        <a class="brand" href="/">
+            <span class="brand-mark" aria-hidden="true">MF</span>
+            <span>
+                <strong>Mobility Finance</strong>
+                <small>Event Platform</small>
+            </span>
+        </a>
+
+        <AuthorizeView>
+            <Authorized Context="authentication">
+                <div class="user-menu">
+                    <span>
+                        <strong>@authentication.User.Identity?.Name</strong>
+                        <small>@GetRoleLabel(authentication.User)</small>
+                    </span>
+                    <form method="post" action="/auth/logout">
+                        <AntiforgeryToken />
+                        <button class="button button-secondary" type="submit">Sign out</button>
+                    </form>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <a class="button button-primary" href="/login">Sign in</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </header>
+
+    <AuthorizeView>
+        <Authorized Context="shellAuthentication">
+            <div class="workspace-shell">
+                <aside class="sidebar">
+                    <nav aria-label="Primary">
+                        <NavLink href="/" Match="NavLinkMatch.All">Overview</NavLink>
+                        <AuthorizeView Policy="@AuthorizationPolicies.OperatorWork" Context="operatorAuthorization">
+                            <NavLink href="/applications">Origination</NavLink>
+                        </AuthorizeView>
+                        <NavLink href="/agreements">Agreements</NavLink>
+                        <NavLink href="/repayments">Repayments</NavLink>
+                        <NavLink href="/assets">Assets</NavLink>
+                        <AuthorizeView Policy="@AuthorizationPolicies.ReviewWork" Context="reviewAuthorization">
+                            <NavLink href="/review">Review queue</NavLink>
+                        </AuthorizeView>
+                        <AuthorizeView Policy="@AuthorizationPolicies.PlatformAdministration" Context="adminAuthorization">
+                            <NavLink href="/platform">Platform</NavLink>
+                        </AuthorizeView>
+                    </nav>
+                    <div class="environment-card">
+                        <span class="status-dot" aria-hidden="true"></span>
+                        <span>
+                            <strong>Local environment</strong>
+                            <small>Synthetic data only</small>
+                        </span>
+                    </div>
+                </aside>
+
+                <main class="main-content">
+                    @Body
+                </main>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <main class="public-content">
+                @Body
+            </main>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
 
 <div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
+    The application encountered an error.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private static string GetRoleLabel(System.Security.Claims.ClaimsPrincipal user)
+    {
+        if (user.IsInRole(PlatformRoles.PlatformAdmin))
+        {
+            return "Platform administrator";
+        }
+
+        if (user.IsInRole(PlatformRoles.Reviewer))
+        {
+            return "Reviewer";
+        }
+
+        return "Operator";
+    }
+}
