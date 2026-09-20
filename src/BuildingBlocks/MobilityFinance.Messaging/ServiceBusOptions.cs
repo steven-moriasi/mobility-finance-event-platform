@@ -6,5 +6,7 @@ public sealed class ServiceBusOptions
 
     public string ConnectionString { get; init; } = string.Empty;
 
+    public string FullyQualifiedNamespace { get; init; } = string.Empty;
+
     public string EventsTopic { get; init; } = "mobility-events";
 }

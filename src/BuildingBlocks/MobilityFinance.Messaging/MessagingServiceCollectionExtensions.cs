@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,17 +16,21 @@ public static class MessagingServiceCollectionExtensions
             .Get<ServiceBusOptions>()
             ?? throw new InvalidOperationException(
                 "Service Bus configuration is required.");
-        if (string.IsNullOrWhiteSpace(options.ConnectionString))
+        if (string.IsNullOrWhiteSpace(options.ConnectionString)
+            && string.IsNullOrWhiteSpace(options.FullyQualifiedNamespace))
         {
             throw new InvalidOperationException(
-                "Service Bus connection string is required.");
+                "Service Bus connection string or namespace is required.");
         }
 
         services
             .AddOptions<ServiceBusOptions>()
             .Bind(configuration.GetRequiredSection(ServiceBusOptions.SectionName))
             .Validate(
-                value => !string.IsNullOrWhiteSpace(value.ConnectionString)
+                value => (
+                    !string.IsNullOrWhiteSpace(value.ConnectionString)
+                    || !string.IsNullOrWhiteSpace(
+                        value.FullyQualifiedNamespace))
                     && !string.IsNullOrWhiteSpace(value.EventsTopic),
                 "Service Bus configuration is invalid.")
             .ValidateOnStart();
@@ -37,6 +42,14 @@ public static class MessagingServiceCollectionExtensions
                     .GetRequiredService<
                         Microsoft.Extensions.Options.IOptions<ServiceBusOptions>>()
                     .Value;
+                if (!string.IsNullOrWhiteSpace(
+                    configured.FullyQualifiedNamespace))
+                {
+                    return new ServiceBusClient(
+                        configured.FullyQualifiedNamespace,
+                        new DefaultAzureCredential());
+                }
+
                 return new ServiceBusClient(configured.ConnectionString);
             });
         services.AddSingleton<InMemoryEventOutbox>();
