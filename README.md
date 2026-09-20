@@ -8,15 +8,23 @@ Users interact with one authenticated web application. A gateway/BFF applies rol
 
 Implementation is in progress. The target system and its engineering decisions are documented in [docs/architecture.md](docs/architecture.md).
 
-## Intended local experience
+## Local experience
 
-The completed repository will expose one startup command:
+Start the current web application, internal APIs, and workers:
 
 ```bash
 make app-start
 ```
 
-That command will start the web application, internal .NET services, databases, Azure Service Bus emulator, device and payment simulators, OpenTelemetry collector, Prometheus, and Grafana.
+Open `http://localhost:8080` and sign in with one of the synthetic local accounts:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Operator | `operator@mobility.local` | `Operator!2026` |
+| Reviewer | `reviewer@mobility.local` | `Reviewer!2026` |
+| Platform administrator | `admin@mobility.local` | `Admin!2026` |
+
+The role-aware shell exposes only the workspaces allowed for the signed-in account, while the BFF applies the same authorization policies server-side. Future increments add the databases, Azure Service Bus emulator, simulators, OpenTelemetry collector, Prometheus, and Grafana behind the same startup command.
 
 ## Truth boundary
 
