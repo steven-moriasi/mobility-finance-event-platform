@@ -31,6 +31,7 @@
     <Project Path="src/Workers/Projections/MobilityFinance.Projections.Worker/MobilityFinance.Projections.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/MobilityFinance.Activation.Tests/MobilityFinance.Activation.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Architecture.Tests/MobilityFinance.Architecture.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Ledger.Tests/MobilityFinance.Ledger.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Messaging.Tests/MobilityFinance.Messaging.Tests.csproj" />

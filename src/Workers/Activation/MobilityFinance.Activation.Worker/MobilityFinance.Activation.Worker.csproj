@@ -1,11 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk.Worker">
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting" />
-  </ItemGroup>
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
     <ProjectReference Include="../../../BuildingBlocks/MobilityFinance.Contracts/MobilityFinance.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/MobilityFinance.Messaging/MobilityFinance.Messaging.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/MobilityFinance.ServiceDefaults/MobilityFinance.ServiceDefaults.csproj" />
   </ItemGroup>
 </Project>
