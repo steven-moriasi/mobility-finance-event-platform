@@ -122,6 +122,13 @@ public sealed class MobilityAsset
         string reason,
         DateTimeOffset requestedAtUtc)
     {
+        if (!Enum.IsDefined(type))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(type),
+                "Device command type is not supported.");
+        }
+
         if (Status != AssetStatus.Assigned)
         {
             throw new InvalidOperationException(

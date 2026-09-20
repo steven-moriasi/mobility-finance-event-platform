@@ -64,6 +64,19 @@ public sealed class MobilityAssetTests
         Assert.NotNull(command.CompletedAtUtc);
     }
 
+    [Fact]
+    public void UnknownDeviceCommandsAreRejected()
+    {
+        MobilityAsset asset = CreateAsset();
+        asset.Assign(Guid.NewGuid());
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => asset.QueueCommand(
+                (DeviceCommandType)99,
+                "Unsupported command.",
+                Now.AddMinutes(1)));
+    }
+
     private static MobilityAsset CreateAsset()
     {
         return MobilityAsset.Register(
