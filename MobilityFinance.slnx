@@ -2,6 +2,7 @@
   <Folder Name="/src/" />
   <Folder Name="/src/BuildingBlocks/">
     <Project Path="src/BuildingBlocks/MobilityFinance.Contracts/MobilityFinance.Contracts.csproj" />
+    <Project Path="src/BuildingBlocks/MobilityFinance.Messaging/MobilityFinance.Messaging.csproj" />
     <Project Path="src/BuildingBlocks/MobilityFinance.ServiceDefaults/MobilityFinance.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/src/Services/" />
@@ -32,6 +33,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/MobilityFinance.Architecture.Tests/MobilityFinance.Architecture.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Ledger.Tests/MobilityFinance.Ledger.Tests.csproj" />
+    <Project Path="tests/MobilityFinance.Messaging.Tests/MobilityFinance.Messaging.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Origination.Tests/MobilityFinance.Origination.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Web.Tests/MobilityFinance.Web.Tests.csproj" />
   </Folder>
