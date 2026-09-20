@@ -72,12 +72,18 @@ services:
 
   assets-api:
     <<: *app
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ServiceBus__ConnectionString: Endpoint=sb://servicebus-emulator;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      ServiceBus__EventsTopic: mobility-events
     build:
       context: .
       dockerfile: deploy/docker/Dockerfile
       args:
         PROJECT_PATH: src/Services/Assets/MobilityFinance.Assets.Api/MobilityFinance.Assets.Api.csproj
         APP_DLL: MobilityFinance.Assets.Api.dll
+    depends_on:
+      - servicebus-emulator
 
   operations-api:
     <<: *app
