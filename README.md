@@ -10,7 +10,8 @@ Implementation is in progress. The target system and its engineering decisions a
 
 ## Local experience
 
-Start the current web application, internal APIs, and workers:
+Start the web application, internal APIs, workers, Service Bus emulator, and
+observability stack:
 
 ```bash
 make app-start
@@ -24,7 +25,19 @@ Open `http://localhost:8080` and sign in with one of the synthetic local account
 | Reviewer | `reviewer@mobility.local` | `Reviewer!2026` |
 | Platform administrator | `admin@mobility.local` | `Admin!2026` |
 
-The role-aware shell exposes only the workspaces allowed for the signed-in account, while the BFF applies the same authorization policies server-side. Future increments add the databases, Azure Service Bus emulator, simulators, OpenTelemetry collector, Prometheus, and Grafana behind the same startup command.
+The role-aware shell exposes only the workspaces allowed for the signed-in
+account, while the BFF applies the same authorization policies server-side.
+Prometheus is available at `http://localhost:9090` and the provisioned Grafana
+workspace at `http://localhost:3000`.
+
+With the stack running, exercise recovery from a broker outage:
+
+```bash
+make recovery-drill
+```
+
+The tested scenario and current in-memory persistence boundary are documented
+in [docs/recovery.md](docs/recovery.md).
 
 ## Truth boundary
 

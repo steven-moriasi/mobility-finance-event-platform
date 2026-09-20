@@ -7,7 +7,7 @@ DOTNET := docker run --rm \
 	-w /workspace \
 	$(DOTNET_IMAGE) dotnet
 
-.PHONY: restore build test format format-check check app-start app-status app-logs app-stop
+.PHONY: restore build test format format-check check app-start app-status app-logs app-stop recovery-drill
 
 restore:
 	$(DOTNET) restore MobilityFinance.slnx
@@ -37,3 +37,6 @@ app-logs:
 
 app-stop:
 	docker compose down --remove-orphans
+
+recovery-drill:
+	./scripts/run-broker-recovery-drill.sh
