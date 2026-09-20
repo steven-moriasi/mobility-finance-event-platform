@@ -8,6 +8,7 @@
   <Folder Name="/src/Services/" />
   <Folder Name="/src/Services/Assets/">
     <Project Path="src/Services/Assets/MobilityFinance.Assets.Api/MobilityFinance.Assets.Api.csproj" />
+    <Project Path="src/Services/Assets/MobilityFinance.Assets.Domain/MobilityFinance.Assets.Domain.csproj" />
   </Folder>
   <Folder Name="/src/Services/Ledger/">
     <Project Path="src/Services/Ledger/MobilityFinance.Ledger.Api/MobilityFinance.Ledger.Api.csproj" />
@@ -33,6 +34,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/MobilityFinance.Activation.Tests/MobilityFinance.Activation.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Architecture.Tests/MobilityFinance.Architecture.Tests.csproj" />
+    <Project Path="tests/MobilityFinance.Assets.Tests/MobilityFinance.Assets.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Ledger.Tests/MobilityFinance.Ledger.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Messaging.Tests/MobilityFinance.Messaging.Tests.csproj" />
     <Project Path="tests/MobilityFinance.Origination.Tests/MobilityFinance.Origination.Tests.csproj" />
