@@ -1,5 +1,6 @@
 @page "/agreements"
 @attribute [Authorize]
+@inject OriginationClient OriginationClient
 
 <PageTitle>Agreements | Mobility Finance</PageTitle>
 
@@ -12,5 +13,72 @@
 </section>
 
 <section class="panel">
-    <div class="table-placeholder">Agreement projections will be populated by service events.</div>
+    <div class="panel-heading">
+        <h2>Accepted offers</h2>
+        <span class="badge">@agreements.Count agreements</span>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(loadError))
+    {
+        <div class="alert alert-error">@loadError</div>
+    }
+    else if (agreements.Count == 0)
+    {
+        <div class="empty-state">Accepted financing offers will appear here.</div>
+    }
+    else
+    {
+        <div class="record-list">
+            @foreach (FinancingApplicationDto application in agreements)
+            {
+                <article class="record-card">
+                    <div class="record-heading">
+                        <div>
+                            <strong>@application.ApplicantReference</strong>
+                            <small>Agreement @application.Agreement!.Id</small>
+                        </div>
+                        <span class="badge badge-success">Awaiting deposit</span>
+                    </div>
+                    <dl class="record-metrics">
+                        <div>
+                            <dt>Total repayable</dt>
+                            <dd>KES @application.Agreement.TotalRepayable.Amount.ToString("N2")</dd>
+                        </div>
+                        <div>
+                            <dt>Deposit required</dt>
+                            <dd>KES @application.Agreement.DepositRequired.Amount.ToString("N2")</dd>
+                        </div>
+                        <div>
+                            <dt>Pricing policy</dt>
+                            <dd>@application.Agreement.PolicyVersion</dd>
+                        </div>
+                        <div>
+                            <dt>Created</dt>
+                            <dd>@application.Agreement.CreatedAtUtc.ToString("dd MMM yyyy")</dd>
+                        </div>
+                    </dl>
+                </article>
+            }
+        </div>
+    }
 </section>
+
+@code {
+    private IReadOnlyList<FinancingApplicationDto> agreements = [];
+    private string? loadError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            IReadOnlyList<FinancingApplicationDto> applications =
+                await OriginationClient.ListApplicationsAsync();
+            agreements = applications
+                .Where(application => application.Agreement is not null)
+                .ToArray();
+        }
+        catch (HttpRequestException)
+        {
+            loadError = "Origination service is unavailable.";
+        }
+    }
+}

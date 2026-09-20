@@ -8,6 +8,9 @@ x-app: &app
 services:
   web:
     <<: *app
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ServiceEndpoints__Origination: http://origination-api:8080
     build:
       context: .
       dockerfile: deploy/docker/Dockerfile

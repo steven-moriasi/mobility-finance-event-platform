@@ -1,5 +1,6 @@
 @page "/applications"
 @attribute [Authorize(Policy = AuthorizationPolicies.OperatorWork)]
+@inject OriginationClient OriginationClient
 
 <PageTitle>Origination | Mobility Finance</PageTitle>
 
@@ -9,15 +10,166 @@
         <h1>Financing origination</h1>
         <p>Create applications, price versioned offers, and follow explicit agreement state transitions.</p>
     </div>
-    <button class="button button-primary" type="button">New application</button>
+    <span class="badge">Policy KE-2026.1</span>
 </section>
 
-<section class="panel">
-    <div class="panel-heading">
-        <h2>Application pipeline</h2>
-        <span class="badge">Foundation view</span>
-    </div>
-    <div class="table-placeholder">
-        Origination records will appear here when the domain service is connected.
-    </div>
+@if (Created.HasValue)
+{
+    <div class="alert alert-success">Application priced successfully.</div>
+}
+
+@if (Accepted.HasValue)
+{
+    <div class="alert alert-success">Offer accepted and agreement created.</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <div class="alert alert-error">@Error</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(loadError))
+{
+    <div class="alert alert-error">@loadError</div>
+}
+
+<section class="content-grid origination-grid">
+    <article class="panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">New application</p>
+                <h2>Price synthetic finance terms</h2>
+            </div>
+        </div>
+        <form class="form-grid" method="post" action="/bff/origination/applications">
+            <AntiforgeryToken />
+            <label>
+                Applicant reference
+                <input name="ApplicantReference" value="SYNTH-" required maxlength="40" />
+            </label>
+            <label>
+                Asset price (KES)
+                <input name="AssetPrice" type="number" value="250000" min="1" step="0.01" required />
+            </label>
+            <label>
+                Deposit (KES)
+                <input name="Deposit" type="number" value="30000" min="0" step="0.01" required />
+            </label>
+            <label>
+                Weekly income (KES)
+                <input name="WeeklyIncome" type="number" value="12000" min="1" step="0.01" required />
+            </label>
+            <label>
+                Term
+                <select name="TermWeeks">
+                    <option value="26">26 weeks</option>
+                    <option value="52" selected>52 weeks</option>
+                    <option value="78">78 weeks</option>
+                    <option value="104">104 weeks</option>
+                </select>
+            </label>
+            <button class="button button-primary" type="submit">Submit and price</button>
+        </form>
+    </article>
+
+    <article class="panel panel-wide">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Application pipeline</p>
+                <h2>Versioned offers</h2>
+            </div>
+            <span class="badge">@applications.Count records</span>
+        </div>
+
+        @if (applications.Count == 0 && string.IsNullOrWhiteSpace(loadError))
+        {
+            <div class="empty-state">Submit the first synthetic application to generate a priced offer.</div>
+        }
+        else
+        {
+            <div class="record-list">
+                @foreach (FinancingApplicationDto application in applications)
+                {
+                    <article class="record-card">
+                        <div class="record-heading">
+                            <div>
+                                <strong>@application.ApplicantReference</strong>
+                                <small>@application.SubmittedAtUtc.ToString("dd MMM yyyy, HH:mm") UTC</small>
+                            </div>
+                            <span class="badge @(application.Status == "Accepted" ? "badge-success" : null)">
+                                @application.Status
+                            </span>
+                        </div>
+                        <dl class="record-metrics">
+                            <div>
+                                <dt>Asset price</dt>
+                                <dd>KES @application.AssetPrice.Amount.ToString("N2")</dd>
+                            </div>
+                            <div>
+                                <dt>Deposit</dt>
+                                <dd>KES @application.Deposit.Amount.ToString("N2")</dd>
+                            </div>
+                            <div>
+                                <dt>Term</dt>
+                                <dd>@application.TermWeeks weeks</dd>
+                            </div>
+                            <div>
+                                <dt>Policy</dt>
+                                <dd>@application.Offer?.PolicyVersion</dd>
+                            </div>
+                        </dl>
+                        @if (application.Offer is not null)
+                        {
+                            <div class="offer-summary">
+                                <span>Total repayable</span>
+                                <strong>KES @application.Offer.TotalRepayable.Amount.ToString("N2")</strong>
+                                <small>
+                                    @application.Offer.Schedule.Count installments ·
+                                    expires @application.Offer.ExpiresAtUtc.ToString("dd MMM yyyy")
+                                </small>
+                            </div>
+                        }
+                        @if (application.Status == "Priced" && application.Offer is not null)
+                        {
+                            <form method="post" action="/bff/origination/applications/@application.Id/accept">
+                                <AntiforgeryToken />
+                                <input name="OfferId" type="hidden" value="@application.Offer.Id" />
+                                <button class="button button-secondary" type="submit">Accept offer</button>
+                            </form>
+                        }
+                        else if (application.Agreement is not null)
+                        {
+                            <small class="muted">Agreement @application.Agreement.Id</small>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </article>
 </section>
+
+@code {
+    private IReadOnlyList<FinancingApplicationDto> applications = [];
+    private string? loadError;
+
+    [SupplyParameterFromQuery]
+    public Guid? Created { get; set; }
+
+    [SupplyParameterFromQuery]
+    public Guid? Accepted { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            applications = await OriginationClient.ListApplicationsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            loadError = "Origination service is unavailable.";
+        }
+    }
+}

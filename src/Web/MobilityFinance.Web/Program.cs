@@ -1,5 +1,6 @@
 using MobilityFinance.ServiceDefaults;
 using MobilityFinance.Web.Components;
+using MobilityFinance.Web.Origination;
 using MobilityFinance.Web.Security;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,14 @@ builder.AddServiceDefaults();
 builder.Services.AddPlatformSecurity(
     builder.Configuration,
     useSecureCookies: !builder.Environment.IsDevelopment());
+builder.Services.AddHttpClient<OriginationClient>(
+    client =>
+    {
+        string endpoint = builder.Configuration["ServiceEndpoints:Origination"]
+            ?? throw new InvalidOperationException(
+                "The origination service endpoint is required.");
+        client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
+    });
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -25,6 +34,7 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapPlatformAuthentication();
+app.MapOriginationBff();
 app.MapGet(
         "/bff/me",
         (HttpContext context) => Results.Ok(
