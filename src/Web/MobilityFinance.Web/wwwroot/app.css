@@ -552,6 +552,77 @@ h2 {
     font-size: 1.1rem;
 }
 
+.ledger-account {
+    gap: 1.25rem;
+}
+
+.ledger-account h3 {
+    font-size: .95rem;
+    margin: 0 0 .75rem;
+}
+
+.inline-form {
+    align-items: end;
+    background: var(--color-surface-raised);
+    border-radius: .75rem;
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: 1fr 1fr auto;
+    padding: 1rem;
+}
+
+.inline-form label,
+.reverse-form {
+    color: var(--color-ink-muted);
+    display: grid;
+    font-size: .75rem;
+    font-weight: 700;
+    gap: .35rem;
+}
+
+.inline-form input,
+.reverse-form input {
+    background: white;
+    border: 1px solid #bac6bc;
+    border-radius: .55rem;
+    min-height: 2.55rem;
+    padding: .55rem .65rem;
+}
+
+.ledger-columns {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr 1fr;
+}
+
+.compact-list {
+    display: grid;
+    gap: .55rem;
+}
+
+.compact-list article {
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: .65rem;
+    display: flex;
+    gap: .75rem;
+    justify-content: space-between;
+    padding: .7rem;
+}
+
+.compact-list article > div {
+    display: grid;
+    gap: .2rem;
+}
+
+.compact-list small {
+    color: var(--color-ink-muted);
+}
+
+.reverse-form {
+    grid-template-columns: minmax(8rem, 1fr) auto;
+}
+
 .demo-accounts {
     border-top: 1px solid var(--color-border);
     color: var(--color-ink-muted);
@@ -685,6 +756,11 @@ h2 {
 
     .record-metrics {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .inline-form,
+    .ledger-columns {
+        grid-template-columns: 1fr;
     }
 
     .panel-wide {

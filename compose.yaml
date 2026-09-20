@@ -11,6 +11,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ServiceEndpoints__Origination: http://origination-api:8080
+      ServiceEndpoints__Ledger: http://ledger-api:8080
     build:
       context: .
       dockerfile: deploy/docker/Dockerfile

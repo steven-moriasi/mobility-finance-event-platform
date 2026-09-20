@@ -1,5 +1,6 @@
 @page "/agreements"
 @attribute [Authorize]
+@inject LedgerClient LedgerClient
 @inject OriginationClient OriginationClient
 
 <PageTitle>Agreements | Mobility Finance</PageTitle>
@@ -13,6 +14,10 @@
 </section>
 
 <section class="panel">
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <div class="alert alert-error">@Error</div>
+    }
     <div class="panel-heading">
         <h2>Accepted offers</h2>
         <span class="badge">@agreements.Count agreements</span>
@@ -56,6 +61,24 @@
                             <dd>@application.Agreement.CreatedAtUtc.ToString("dd MMM yyyy")</dd>
                         </div>
                     </dl>
+                    @{
+                        LedgerAccountDto? ledger = accounts.SingleOrDefault(
+                            account => account.AgreementId == application.Agreement.Id);
+                    }
+                    @if (ledger is null)
+                    {
+                        <AuthorizeView Policy="@AuthorizationPolicies.OperatorWork" Context="operatorAuthorization">
+                            <form method="post" action="/bff/ledger/accounts">
+                                <AntiforgeryToken />
+                                <input name="ApplicationId" type="hidden" value="@application.Id" />
+                                <button class="button button-secondary" type="submit">Open servicing account</button>
+                            </form>
+                        </AuthorizeView>
+                    }
+                    else
+                    {
+                        <a class="button button-secondary" href="/repayments">View ledger</a>
+                    }
                 </article>
             }
         </div>
@@ -64,7 +87,11 @@
 
 @code {
     private IReadOnlyList<FinancingApplicationDto> agreements = [];
+    private IReadOnlyList<LedgerAccountDto> accounts = [];
     private string? loadError;
+
+    [SupplyParameterFromQuery]
+    public string? Error { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,6 +102,7 @@
             agreements = applications
                 .Where(application => application.Agreement is not null)
                 .ToArray();
+            accounts = await LedgerClient.ListAccountsAsync();
         }
         catch (HttpRequestException)
         {

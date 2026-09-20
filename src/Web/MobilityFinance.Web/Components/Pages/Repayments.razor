@@ -1,5 +1,6 @@
 @page "/repayments"
 @attribute [Authorize]
+@inject LedgerClient LedgerClient
 
 <PageTitle>Repayments | Mobility Finance</PageTitle>
 
@@ -11,6 +12,179 @@
     </div>
 </section>
 
-<section class="panel">
-    <div class="table-placeholder">Balanced ledger activity will be exposed here through the BFF.</div>
-</section>
+@if (Opened.HasValue)
+{
+    <div class="alert alert-success">Servicing account opened with a balanced opening transaction.</div>
+}
+
+@if (Payment.HasValue)
+{
+    <div class="alert alert-success">
+        @(Duplicate ? "Provider retry matched the existing payment." : "Payment recorded and allocated.")
+    </div>
+}
+
+@if (Reversed.HasValue)
+{
+    <div class="alert alert-success">Payment reversed through compensating entries.</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <div class="alert alert-error">@Error</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(loadError))
+{
+    <div class="alert alert-error">@loadError</div>
+}
+else if (accounts.Count == 0)
+{
+    <section class="panel">
+        <div class="empty-state">
+            Accept an offer and open its servicing account to begin repayment processing.
+        </div>
+    </section>
+}
+else
+{
+    <section class="record-list">
+        @foreach (LedgerAccountDto account in accounts)
+        {
+            <article class="panel ledger-account">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">@account.CustomerReference</p>
+                        <h2>Account @account.Id</h2>
+                    </div>
+                    <span class="badge @(account.Balance.Settled ? "badge-success" : null)">
+                        @(account.Balance.Settled
+                            ? "Settled"
+                            : account.Balance.DepositSatisfied ? "Repaying" : "Awaiting deposit")
+                    </span>
+                </div>
+
+                <dl class="record-metrics">
+                    <div>
+                        <dt>Deposit outstanding</dt>
+                        <dd>KES @account.Balance.DepositOutstanding.Amount.ToString("N2")</dd>
+                    </div>
+                    <div>
+                        <dt>Repayment outstanding</dt>
+                        <dd>KES @account.Balance.RepaymentOutstanding.Amount.ToString("N2")</dd>
+                    </div>
+                    <div>
+                        <dt>Customer credit</dt>
+                        <dd>KES @account.Balance.CustomerCredit.Amount.ToString("N2")</dd>
+                    </div>
+                    <div>
+                        <dt>Journal transactions</dt>
+                        <dd>@account.Transactions.Count</dd>
+                    </div>
+                </dl>
+
+                <AuthorizeView Policy="@AuthorizationPolicies.OperatorWork" Context="operatorAuthorization">
+                    <form class="inline-form" method="post" action="/bff/ledger/accounts/@account.Id/payments">
+                        <AntiforgeryToken />
+                        <label>
+                            Provider transaction
+                            <input name="ProviderTransactionId" placeholder="SYNTH-PAY-1001" required maxlength="80" />
+                        </label>
+                        <label>
+                            Amount (KES)
+                            <input name="Amount" type="number" min="0.01" step="0.01" required />
+                        </label>
+                        <button class="button button-primary" type="submit">Record payment</button>
+                    </form>
+                </AuthorizeView>
+
+                <div class="ledger-columns">
+                    <section>
+                        <h3>Provider payments</h3>
+                        @if (account.Payments.Count == 0)
+                        {
+                            <p class="muted">No provider payments recorded.</p>
+                        }
+                        else
+                        {
+                            <div class="compact-list">
+                                @foreach (PaymentDto payment in account.Payments.OrderByDescending(item => item.ReceivedAtUtc))
+                                {
+                                    <article>
+                                        <div>
+                                            <strong>@payment.ProviderTransactionId</strong>
+                                            <small>
+                                                KES @payment.Amount.Amount.ToString("N2") · @payment.Status
+                                            </small>
+                                        </div>
+                                        @if (payment.Status == "Posted")
+                                        {
+                                            <AuthorizeView Policy="@AuthorizationPolicies.ReviewWork" Context="reviewAuthorization">
+                                                <form class="reverse-form"
+                                                      method="post"
+                                                      action="/bff/ledger/accounts/@account.Id/payments/@payment.Id/reverse">
+                                                    <AntiforgeryToken />
+                                                    <input name="Reason" placeholder="Reversal reason" required maxlength="120" />
+                                                    <button class="button button-secondary" type="submit">Reverse</button>
+                                                </form>
+                                            </AuthorizeView>
+                                        }
+                                    </article>
+                                }
+                            </div>
+                        }
+                    </section>
+                    <section>
+                        <h3>Immutable journal</h3>
+                        <div class="compact-list">
+                            @foreach (LedgerTransactionDto transaction in account.Transactions.OrderByDescending(item => item.PostedAtUtc))
+                            {
+                                <article>
+                                    <div>
+                                        <strong>@transaction.Type</strong>
+                                        <small>@transaction.PostedAtUtc.ToString("dd MMM yyyy, HH:mm") UTC</small>
+                                    </div>
+                                    <span class="badge">
+                                        @transaction.Entries.Count entries
+                                    </span>
+                                </article>
+                            }
+                        </div>
+                    </section>
+                </div>
+            </article>
+        }
+    </section>
+}
+
+@code {
+    private IReadOnlyList<LedgerAccountDto> accounts = [];
+    private string? loadError;
+
+    [SupplyParameterFromQuery]
+    public Guid? Opened { get; set; }
+
+    [SupplyParameterFromQuery]
+    public Guid? Payment { get; set; }
+
+    [SupplyParameterFromQuery]
+    public bool Duplicate { get; set; }
+
+    [SupplyParameterFromQuery]
+    public Guid? Reversed { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            accounts = await LedgerClient.ListAccountsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            loadError = "Ledger service is unavailable.";
+        }
+    }
+}

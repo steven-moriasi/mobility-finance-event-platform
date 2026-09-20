@@ -16,6 +16,15 @@ public sealed class OriginationClient(HttpClient httpClient)
         return applications ?? [];
     }
 
+    public Task<FinancingApplicationDto?> GetApplicationAsync(
+        Guid applicationId,
+        CancellationToken cancellationToken = default)
+    {
+        return httpClient.GetFromJsonAsync<FinancingApplicationDto>(
+            $"applications/{applicationId}",
+            cancellationToken);
+    }
+
     public async Task<OriginationResult<FinancingApplicationDto>> SubmitApplicationAsync(
         CreateApplicationCommand command,
         CancellationToken cancellationToken = default)

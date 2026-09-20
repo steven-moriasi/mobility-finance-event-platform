@@ -1,5 +1,6 @@
 using MobilityFinance.ServiceDefaults;
 using MobilityFinance.Web.Components;
+using MobilityFinance.Web.Ledger;
 using MobilityFinance.Web.Origination;
 using MobilityFinance.Web.Security;
 
@@ -15,6 +16,14 @@ builder.Services.AddHttpClient<OriginationClient>(
         string endpoint = builder.Configuration["ServiceEndpoints:Origination"]
             ?? throw new InvalidOperationException(
                 "The origination service endpoint is required.");
+        client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
+    });
+builder.Services.AddHttpClient<LedgerClient>(
+    client =>
+    {
+        string endpoint = builder.Configuration["ServiceEndpoints:Ledger"]
+            ?? throw new InvalidOperationException(
+                "The ledger service endpoint is required.");
         client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
     });
 builder.Services.AddRazorComponents()
@@ -35,6 +44,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapPlatformAuthentication();
 app.MapOriginationBff();
+app.MapLedgerBff();
 app.MapGet(
         "/bff/me",
         (HttpContext context) => Results.Ok(
