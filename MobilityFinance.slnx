@@ -10,6 +10,7 @@
   </Folder>
   <Folder Name="/src/Services/Ledger/">
     <Project Path="src/Services/Ledger/MobilityFinance.Ledger.Api/MobilityFinance.Ledger.Api.csproj" />
+    <Project Path="src/Services/Ledger/MobilityFinance.Ledger.Domain/MobilityFinance.Ledger.Domain.csproj" />
   </Folder>
   <Folder Name="/src/Services/Operations/">
     <Project Path="src/Services/Operations/MobilityFinance.Operations.Api/MobilityFinance.Operations.Api.csproj" />
