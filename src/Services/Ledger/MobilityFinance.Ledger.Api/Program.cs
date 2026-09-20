@@ -11,6 +11,7 @@ builder.Services.AddSingleton<InMemoryLedgerRepository>();
 
 var app = builder.Build();
 
+app.UseServiceDefaults();
 app.MapDefaultEndpoints();
 app.MapLedgerEndpoints();
 

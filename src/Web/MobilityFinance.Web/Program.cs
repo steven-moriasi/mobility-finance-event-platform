@@ -40,6 +40,8 @@ builder.Services.AddRazorComponents()
 
 var app = builder.Build();
 
+app.UseServiceDefaults();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);

@@ -11,6 +11,7 @@ builder.Services.AddSingleton<InMemoryOriginationRepository>();
 
 var app = builder.Build();
 
+app.UseServiceDefaults();
 app.MapDefaultEndpoints();
 app.MapOriginationEndpoints();
 

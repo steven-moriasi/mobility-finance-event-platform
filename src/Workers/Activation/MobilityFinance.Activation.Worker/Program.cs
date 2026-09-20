@@ -11,6 +11,7 @@ builder.Services.AddHostedService<Worker>();
 
 var app = builder.Build();
 
+app.UseServiceDefaults();
 app.MapDefaultEndpoints();
 app.MapGet(
     "/workflows",

@@ -11,6 +11,7 @@ builder.Services.AddMobilityEventPublishing(builder.Configuration);
 
 var app = builder.Build();
 
+app.UseServiceDefaults();
 app.MapAssetEndpoints();
 app.MapDefaultEndpoints();
 
