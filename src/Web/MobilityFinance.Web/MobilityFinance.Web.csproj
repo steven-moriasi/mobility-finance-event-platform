@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../BuildingBlocks/MobilityFinance.Contracts/MobilityFinance.Contracts.csproj" />
+    <ProjectReference Include="../../BuildingBlocks/MobilityFinance.ServiceDefaults/MobilityFinance.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

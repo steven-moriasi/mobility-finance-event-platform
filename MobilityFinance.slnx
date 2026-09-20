@@ -1,0 +1,33 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/MobilityFinance.Contracts/MobilityFinance.Contracts.csproj" />
+    <Project Path="src/BuildingBlocks/MobilityFinance.ServiceDefaults/MobilityFinance.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/Assets/">
+    <Project Path="src/Services/Assets/MobilityFinance.Assets.Api/MobilityFinance.Assets.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Ledger/">
+    <Project Path="src/Services/Ledger/MobilityFinance.Ledger.Api/MobilityFinance.Ledger.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Operations/">
+    <Project Path="src/Services/Operations/MobilityFinance.Operations.Api/MobilityFinance.Operations.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Origination/">
+    <Project Path="src/Services/Origination/MobilityFinance.Origination.Api/MobilityFinance.Origination.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Web/">
+    <Project Path="src/Web/MobilityFinance.Web/MobilityFinance.Web.csproj" />
+  </Folder>
+  <Folder Name="/src/Workers/" />
+  <Folder Name="/src/Workers/Activation/">
+    <Project Path="src/Workers/Activation/MobilityFinance.Activation.Worker/MobilityFinance.Activation.Worker.csproj" />
+  </Folder>
+  <Folder Name="/src/Workers/Projections/">
+    <Project Path="src/Workers/Projections/MobilityFinance.Projections.Worker/MobilityFinance.Projections.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MobilityFinance.Architecture.Tests/MobilityFinance.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

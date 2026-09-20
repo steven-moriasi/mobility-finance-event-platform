@@ -1,0 +1,9 @@
+@MobilityFinance.Operations.Api_HostAddress = http://localhost:5157
+
+GET {{MobilityFinance.Operations.Api_HostAddress}}/health/ready
+Accept: application/json
+
+###
+
+GET {{MobilityFinance.Operations.Api_HostAddress}}/_system
+Accept: application/json
