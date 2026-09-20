@@ -39,6 +39,20 @@ make recovery-drill
 The tested scenario and current in-memory persistence boundary are documented
 in [docs/recovery.md](docs/recovery.md).
 
+## Deployment evidence
+
+The repository includes a secure Helm chart, modular Azure Bicep, locked
+dependencies, CI/security workflows, attested release-image automation, and a
+manually gated Azure delivery workflow. Validate these artifacts locally:
+
+```bash
+make infra-check
+```
+
+Provisioning inputs, GitHub Environment requirements, and the explicit
+no-cloud-deployment truth boundary are documented in
+[docs/deployment.md](docs/deployment.md).
+
 ## Truth boundary
 
 This is an original portfolio project built with synthetic data. It is not affiliated with M-KOPA, does not reproduce any private platform, and does not perform real lending, payment collection, vehicle tracking, or device control.
