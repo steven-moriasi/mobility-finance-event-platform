@@ -7,3 +7,23 @@ Accept: application/json
 
 GET {{MobilityFinance.Ledger.Api_HostAddress}}/_system
 Accept: application/json
+
+###
+
+POST {{MobilityFinance.Ledger.Api_HostAddress}}/accounts
+Content-Type: application/json
+
+{
+  "agreementId": "11111111-1111-1111-1111-111111111111",
+  "customerReference": "SYNTH-3001",
+  "currency": "KES",
+  "depositRequired": 30000,
+  "principal": 220000,
+  "financeCharge": 28600,
+  "serviceFee": 10000
+}
+
+###
+
+GET {{MobilityFinance.Ledger.Api_HostAddress}}/accounts
+Accept: application/json
