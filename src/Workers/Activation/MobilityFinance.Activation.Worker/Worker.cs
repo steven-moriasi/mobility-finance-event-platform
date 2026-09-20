@@ -62,6 +62,7 @@ public sealed class Worker(
         }
         catch (JsonException exception)
         {
+            ActivationDiagnostics.DeadLetteredEvents.Add(1);
             await args.DeadLetterMessageAsync(
                 args.Message,
                 "InvalidEnvelope",
@@ -71,6 +72,7 @@ public sealed class Worker(
 
         if (envelope is null)
         {
+            ActivationDiagnostics.DeadLetteredEvents.Add(1);
             await args.DeadLetterMessageAsync(
                 args.Message,
                 "InvalidEnvelope",
@@ -79,8 +81,23 @@ public sealed class Worker(
         }
 
         ActivationProcessingResult result = workflows.Apply(envelope);
+        ActivationDiagnostics.ProcessedEvents.Add(
+            1,
+            new KeyValuePair<string, object?>(
+                "event.type",
+                envelope.EventType));
+        if (result.IsDuplicate)
+        {
+            ActivationDiagnostics.DuplicateEvents.Add(
+                1,
+                new KeyValuePair<string, object?>(
+                    "event.type",
+                    envelope.EventType));
+        }
+
         if (result.ActivatedWorkflow is not null)
         {
+            ActivationDiagnostics.ActivatedAgreements.Add(1);
             ActivationWorkflow activated = result.ActivatedWorkflow;
             outbox.Enqueue(
                 IntegrationEventFactory.Create(

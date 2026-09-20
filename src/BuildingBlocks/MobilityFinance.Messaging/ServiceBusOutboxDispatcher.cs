@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Hosting;
@@ -47,6 +48,7 @@ public sealed class ServiceBusOutboxDispatcher(
         CancellationToken cancellationToken)
     {
         IntegrationEventEnvelope envelope = outboxMessage.Envelope;
+        long startedAt = Stopwatch.GetTimestamp();
         try
         {
             ServiceBusMessage message = new(
@@ -65,6 +67,11 @@ public sealed class ServiceBusOutboxDispatcher(
 
             await sender.SendMessageAsync(message, cancellationToken);
             outbox.MarkPublished(envelope.MessageId);
+            MessagingDiagnostics.PublishedEvents.Add(
+                1,
+                new KeyValuePair<string, object?>(
+                    "event.type",
+                    envelope.EventType));
         }
         catch (Exception exception)
             when (exception is ServiceBusException
@@ -82,7 +89,20 @@ public sealed class ServiceBusOutboxDispatcher(
                 envelope.MessageId,
                 outboxMessage.Attempts + 1,
                 exception);
+            MessagingDiagnostics.FailedDeliveries.Add(
+                1,
+                new KeyValuePair<string, object?>(
+                    "event.type",
+                    envelope.EventType));
             outbox.Reschedule(envelope.MessageId, exception.Message);
+        }
+        finally
+        {
+            MessagingDiagnostics.PublishDuration.Record(
+                Stopwatch.GetElapsedTime(startedAt).TotalSeconds,
+                new KeyValuePair<string, object?>(
+                    "event.type",
+                    envelope.EventType));
         }
     }
 }

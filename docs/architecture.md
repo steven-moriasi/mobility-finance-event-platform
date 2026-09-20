@@ -294,17 +294,19 @@ Startup includes dependency health checks and deterministic seed data. `make app
 OpenTelemetry propagates context through HTTP and Service Bus. The platform records:
 
 - request rate, error rate, and latency;
-- message age, retry count, processing duration, and dead-letter count;
-- workflow completion, compensation, and timeout counts;
-- payment ingestion and allocation lag;
-- ledger invariant failures;
-- heartbeat age and simulated command latency;
-- authentication failures and authorization denials;
+- event publication, failed delivery, and publish duration;
+- activation processing, duplicate delivery, completed workflow, and
+  invalid-envelope dead-letter counts;
 - business-safe structured logs without secrets or personal data.
 
-Grafana dashboards present service health and business workflows. Alerts link to runbooks. A user can move from an agreement or workflow in the web application to its correlated trace.
+The next instrumentation increment adds message age, retry exhaustion, payment
+allocation lag, ledger invariant failures, heartbeat age, simulated command
+latency, and authorization-denial signals.
 
-SLO values are documented as design targets until measured in a running environment.
+Grafana dashboards present service health and event delivery. Alerts and
+workflow-to-trace navigation are part of the deployment automation phase. SLO
+values are documented as design targets until measured in a production-like
+environment.
 
 ## Security and safety
 

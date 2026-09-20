@@ -46,7 +46,13 @@ public static class ServiceDefaultsExtensions
                 metrics
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddRuntimeInstrumentation();
+                    .AddRuntimeInstrumentation()
+                    .AddMeter(
+                        "MobilityFinance.Activation",
+                        "MobilityFinance.Assets",
+                        "MobilityFinance.Ledger",
+                        "MobilityFinance.Messaging",
+                        "MobilityFinance.Origination");
 
                 if (HasOtlpEndpoint(builder))
                 {
