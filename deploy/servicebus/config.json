@@ -8,8 +8,8 @@
           {
             "Name": "mobility-events",
             "Properties": {
-              "DefaultMessageTimeToLive": "P7D",
-              "DuplicateDetectionHistoryTimeWindow": "PT10M",
+              "DefaultMessageTimeToLive": "PT1H",
+              "DuplicateDetectionHistoryTimeWindow": "PT5M",
               "RequiresDuplicateDetection": true
             },
             "Subscriptions": [
@@ -17,7 +17,7 @@
                 "Name": "activation-workflows",
                 "Properties": {
                   "DeadLetteringOnMessageExpiration": true,
-                  "DefaultMessageTimeToLive": "P7D",
+                  "DefaultMessageTimeToLive": "PT1H",
                   "LockDuration": "PT1M",
                   "MaxDeliveryCount": 5,
                   "ForwardDeadLetteredMessagesTo": "",
@@ -29,7 +29,7 @@
                 "Name": "operations-projections",
                 "Properties": {
                   "DeadLetteringOnMessageExpiration": true,
-                  "DefaultMessageTimeToLive": "P7D",
+                  "DefaultMessageTimeToLive": "PT1H",
                   "LockDuration": "PT1M",
                   "MaxDeliveryCount": 5,
                   "ForwardDeadLetteredMessagesTo": "",
