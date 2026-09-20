@@ -1,0 +1,28 @@
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+secrets/
+
+# IDE and operating system
+.idea/
+.vscode/
+.vs/
+.DS_Store
+
+# Test and analysis output
+TestResults/
+coverage/
+artifacts/
+BenchmarkDotNet.Artifacts/
+
+# Local runtime data
+.data/
+*.log
