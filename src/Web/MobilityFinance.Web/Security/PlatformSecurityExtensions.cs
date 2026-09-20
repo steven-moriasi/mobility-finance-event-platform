@@ -1,9 +1,13 @@
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MobilityFinance.Web.Security;
 
 public static class PlatformSecurityExtensions
 {
+    public const string AuthenticationRateLimitPolicy = "authentication";
+
     public static IServiceCollection AddPlatformSecurity(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -50,7 +54,59 @@ public static class PlatformSecurityExtensions
                 policy => policy.RequireRole(PlatformRoles.PlatformAdmin));
 
         services.AddCascadingAuthenticationState();
+        services.AddRateLimiter(
+            options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.AddPolicy(
+                    AuthenticationRateLimitPolicy,
+                    httpContext => RateLimitPartition.GetFixedWindowLimiter(
+                        httpContext.Connection.RemoteIpAddress?.ToString()
+                            ?? "unknown",
+                        static _ => new FixedWindowRateLimiterOptions
+                        {
+                            AutoReplenishment = true,
+                            PermitLimit = 5,
+                            QueueLimit = 0,
+                            Window = TimeSpan.FromMinutes(1),
+                        }));
+            });
 
         return services;
+    }
+
+    public static WebApplication UsePlatformSecurityHeaders(
+        this WebApplication app)
+    {
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseHsts();
+        }
+
+        app.Use(
+            async (context, next) =>
+            {
+                IHeaderDictionary headers = context.Response.Headers;
+                headers.XContentTypeOptions = "nosniff";
+                headers.XFrameOptions = "DENY";
+                headers["Referrer-Policy"] = "no-referrer";
+                headers["Permissions-Policy"] =
+                    "camera=(), geolocation=(), microphone=()";
+                headers.ContentSecurityPolicy =
+                    "default-src 'self'; "
+                    + "base-uri 'self'; "
+                    + "connect-src 'self' ws: wss:; "
+                    + "font-src 'self'; "
+                    + "form-action 'self'; "
+                    + "frame-ancestors 'none'; "
+                    + "img-src 'self' data:; "
+                    + "object-src 'none'; "
+                    + "script-src 'self' 'unsafe-inline'; "
+                    + "style-src 'self' 'unsafe-inline'";
+
+                await next(context);
+            });
+
+        return app;
     }
 }

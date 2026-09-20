@@ -7,6 +7,12 @@ namespace MobilityFinance.Web.Security;
 
 public static class AuthenticationEndpoints
 {
+    private static readonly Action<ILogger, Exception?> LogAuthenticationFailure =
+        LoggerMessage.Define(
+            LogLevel.Warning,
+            new EventId(1001, "AuthenticationFailure"),
+            "Authentication failed.");
+
     public static IEndpointRouteBuilder MapPlatformAuthentication(
         this IEndpointRouteBuilder endpoints)
     {
@@ -20,7 +26,8 @@ public static class AuthenticationEndpoints
                 async (
                     [FromForm] LoginRequest request,
                     LocalAccountStore accounts,
-                    HttpContext httpContext) =>
+                    HttpContext httpContext,
+                    ILoggerFactory loggerFactory) =>
                 {
                     LocalAccount? account = accounts.ValidateCredentials(
                         request.Email,
@@ -28,6 +35,11 @@ public static class AuthenticationEndpoints
 
                     if (account is null)
                     {
+                        LogAuthenticationFailure(
+                            loggerFactory.CreateLogger(
+                                "MobilityFinance.Security"),
+                            null);
+
                         return Results.LocalRedirect(
                             $"/login?error=invalid&returnUrl={Uri.EscapeDataString(GetReturnUrl(request.ReturnUrl))}");
                     }
@@ -57,7 +69,9 @@ public static class AuthenticationEndpoints
 
                     return Results.LocalRedirect(GetReturnUrl(request.ReturnUrl));
                 })
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .RequireRateLimiting(
+                PlatformSecurityExtensions.AuthenticationRateLimitPolicy);
 
         authentication
             .MapPost(

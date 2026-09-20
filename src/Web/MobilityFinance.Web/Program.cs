@@ -41,6 +41,7 @@ builder.Services.AddRazorComponents()
 var app = builder.Build();
 
 app.UseServiceDefaults();
+app.UsePlatformSecurityHeaders();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -48,6 +49,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
