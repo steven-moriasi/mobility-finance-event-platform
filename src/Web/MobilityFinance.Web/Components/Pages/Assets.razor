@@ -1,5 +1,7 @@
 @page "/assets"
 @attribute [Authorize]
+@inject AssetClient AssetClient
+@inject OriginationClient OriginationClient
 
 <PageTitle>Assets | Mobility Finance</PageTitle>
 
@@ -11,6 +13,232 @@
     </div>
 </section>
 
-<section class="panel">
-    <div class="table-placeholder">Synthetic asset inventory and device status will appear here.</div>
+@if (Registered.HasValue)
+{
+    <div class="alert alert-success">Synthetic asset registered.</div>
+}
+
+@if (Assigned.HasValue)
+{
+    <div class="alert alert-success">
+        @(Duplicate ? "Asset assignment was already recorded." : "Asset assigned to the agreement.")
+    </div>
+}
+
+@if (Simulated.HasValue)
+{
+    <div class="alert alert-success">Synthetic device heartbeat processed.</div>
+}
+
+@if (Command.HasValue)
+{
+    <div class="alert alert-success">Device command queued for the next simulation tick.</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <div class="alert alert-error">@Error</div>
+}
+
+@if (!string.IsNullOrWhiteSpace(loadError))
+{
+    <div class="alert alert-error">@loadError</div>
+}
+
+<section class="content-grid asset-grid">
+    <AuthorizeView Policy="@AuthorizationPolicies.OperatorWork" Context="operatorAuthorization">
+        <article class="panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">Inventory intake</p>
+                    <h2>Register synthetic asset</h2>
+                </div>
+            </div>
+            <form class="form-grid" method="post" action="/bff/assets">
+                <AntiforgeryToken />
+                <label>
+                    Asset reference
+                    <input name="Reference" placeholder="MOTO-KE-1001" required maxlength="40" />
+                </label>
+                <label>
+                    Synthetic serial number
+                    <input name="SerialNumber" placeholder="VIN-SYNTH-1001" required maxlength="80" />
+                </label>
+                <label>
+                    Model
+                    <input name="Model" value="Synthetic E-Moto" required maxlength="80" />
+                </label>
+                <button class="button button-primary" type="submit">Register asset</button>
+            </form>
+        </article>
+    </AuthorizeView>
+
+    <article class="panel panel-wide">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Fleet state</p>
+                <h2>Inventory and telemetry</h2>
+            </div>
+            <span class="badge">@assets.Count assets</span>
+        </div>
+
+        @if (assets.Count == 0 && string.IsNullOrWhiteSpace(loadError))
+        {
+            <div class="empty-state">Register the first synthetic mobility asset.</div>
+        }
+        else
+        {
+            <div class="record-list">
+                @foreach (AssetDto asset in assets)
+                {
+                    <article class="record-card asset-card">
+                        <div class="record-heading">
+                            <div>
+                                <strong>@asset.Reference</strong>
+                                <small>@asset.Model · @asset.SerialNumber</small>
+                            </div>
+                            <span class="badge @(asset.Status == "Assigned" ? "badge-success" : null)">
+                                @asset.Status
+                            </span>
+                        </div>
+
+                        <dl class="record-metrics">
+                            <div>
+                                <dt>Agreement</dt>
+                                <dd>@(asset.AgreementId?.ToString() ?? "Unassigned")</dd>
+                            </div>
+                            <div>
+                                <dt>Battery</dt>
+                                <dd>@(asset.LastHeartbeat is null ? "No signal" : $"{asset.LastHeartbeat.BatteryPercent:N0}%")</dd>
+                            </div>
+                            <div>
+                                <dt>Odometer</dt>
+                                <dd>@(asset.LastHeartbeat is null ? "—" : $"{asset.LastHeartbeat.OdometerKm:N1} km")</dd>
+                            </div>
+                            <div>
+                                <dt>Commands</dt>
+                                <dd>@asset.Commands.Count</dd>
+                            </div>
+                        </dl>
+
+                        @if (asset.Status == "Available")
+                        {
+                            <AuthorizeView Policy="@AuthorizationPolicies.OperatorWork" Context="assignmentAuthorization">
+                                @if (agreements.Count == 0)
+                                {
+                                    <p class="muted">Accept an offer before assigning this asset.</p>
+                                }
+                                else
+                                {
+                                    <form class="inline-form" method="post" action="/bff/assets/@asset.Id/assign">
+                                        <AntiforgeryToken />
+                                        <label class="span-two">
+                                            Financing agreement
+                                            <select name="AgreementId" required>
+                                                @foreach (AgreementOption agreement in agreements)
+                                                {
+                                                    <option value="@agreement.Id">@agreement.CustomerReference · @agreement.Id</option>
+                                                }
+                                            </select>
+                                        </label>
+                                        <button class="button button-primary" type="submit">Assign asset</button>
+                                    </form>
+                                }
+                            </AuthorizeView>
+                        }
+                        else
+                        {
+                            <div class="asset-actions">
+                                <AuthorizeView Policy="@AuthorizationPolicies.OperatorWork" Context="simulationAuthorization">
+                                    <form method="post" action="/bff/assets/@asset.Id/simulation/tick">
+                                        <AntiforgeryToken />
+                                        <button class="button button-secondary" type="submit">Simulate device tick</button>
+                                    </form>
+                                </AuthorizeView>
+                                <AuthorizeView Policy="@AuthorizationPolicies.PlatformAdministration" Context="commandAuthorization">
+                                    <form class="command-form" method="post" action="/bff/assets/@asset.Id/commands">
+                                        <AntiforgeryToken />
+                                        <select name="Type">
+                                            <option value="0">Locate</option>
+                                            <option value="1">Lock</option>
+                                            <option value="2">Unlock</option>
+                                        </select>
+                                        <input name="Reason" placeholder="Auditable command reason" required maxlength="120" />
+                                        <button class="button button-secondary" type="submit">Queue command</button>
+                                    </form>
+                                </AuthorizeView>
+                            </div>
+                        }
+
+                        @if (asset.Commands.Count > 0)
+                        {
+                            <div class="compact-list">
+                                @foreach (DeviceCommandDto command in asset.Commands.OrderByDescending(item => item.RequestedAtUtc))
+                                {
+                                    <article>
+                                        <div>
+                                            <strong>@command.Type</strong>
+                                            <small>@command.Reason</small>
+                                        </div>
+                                        <span class="badge @(command.Status == "Completed" ? "badge-success" : null)">
+                                            @command.Status
+                                        </span>
+                                    </article>
+                                }
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </article>
 </section>
+
+@code {
+    private IReadOnlyList<AssetDto> assets = [];
+    private IReadOnlyList<AgreementOption> agreements = [];
+    private string? loadError;
+
+    [SupplyParameterFromQuery]
+    public Guid? Registered { get; set; }
+
+    [SupplyParameterFromQuery]
+    public Guid? Assigned { get; set; }
+
+    [SupplyParameterFromQuery]
+    public bool Duplicate { get; set; }
+
+    [SupplyParameterFromQuery]
+    public Guid? Simulated { get; set; }
+
+    [SupplyParameterFromQuery]
+    public Guid? Command { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            assets = await AssetClient.ListAssetsAsync();
+            IReadOnlyList<FinancingApplicationDto> applications =
+                await OriginationClient.ListApplicationsAsync();
+            agreements = applications
+                .Where(application => application.Agreement is not null)
+                .Select(
+                    application => new AgreementOption(
+                        application.Agreement!.Id,
+                        application.ApplicantReference))
+                .ToArray();
+        }
+        catch (HttpRequestException)
+        {
+            loadError = "Asset or origination service is unavailable.";
+        }
+    }
+
+    private sealed record AgreementOption(
+        Guid Id,
+        string CustomerReference);
+}

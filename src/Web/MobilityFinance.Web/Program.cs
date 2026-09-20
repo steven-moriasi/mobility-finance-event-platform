@@ -1,4 +1,5 @@
 using MobilityFinance.ServiceDefaults;
+using MobilityFinance.Web.Assets;
 using MobilityFinance.Web.Components;
 using MobilityFinance.Web.Ledger;
 using MobilityFinance.Web.Origination;
@@ -26,6 +27,14 @@ builder.Services.AddHttpClient<LedgerClient>(
                 "The ledger service endpoint is required.");
         client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
     });
+builder.Services.AddHttpClient<AssetClient>(
+    client =>
+    {
+        string endpoint = builder.Configuration["ServiceEndpoints:Assets"]
+            ?? throw new InvalidOperationException(
+                "The asset service endpoint is required.");
+        client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
+    });
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -45,6 +54,7 @@ app.MapStaticAssets();
 app.MapPlatformAuthentication();
 app.MapOriginationBff();
 app.MapLedgerBff();
+app.MapAssetBff();
 app.MapGet(
         "/bff/me",
         (HttpContext context) => Results.Ok(

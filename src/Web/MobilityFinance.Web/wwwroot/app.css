@@ -581,12 +581,52 @@ h2 {
 }
 
 .inline-form input,
+.inline-form select,
+.command-form input,
+.command-form select,
 .reverse-form input {
     background: white;
     border: 1px solid #bac6bc;
     border-radius: .55rem;
     min-height: 2.55rem;
     padding: .55rem .65rem;
+}
+
+.asset-grid {
+    grid-template-columns: minmax(18rem, .65fr) minmax(30rem, 1.8fr);
+}
+
+.asset-card {
+    gap: 1.25rem;
+}
+
+.asset-card .record-metrics dd {
+    overflow-wrap: anywhere;
+}
+
+.asset-actions,
+.command-form {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+.command-form {
+    flex: 1;
+}
+
+.command-form input {
+    flex: 1;
+    min-width: 14rem;
+}
+
+.command-form select {
+    min-height: 2.55rem;
+}
+
+.span-two {
+    grid-column: span 2;
 }
 
 .ledger-columns {
