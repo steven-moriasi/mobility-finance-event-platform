@@ -1,0 +1,140 @@
+name: Deploy to Azure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub environment containing Azure deployment variables
+        required: true
+        type: choice
+        options:
+          - azure-dev
+          - azure-prod
+      imageTag:
+        description: Immutable image tag
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  build-images:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: mobility-finance-web
+            project: src/Web/MobilityFinance.Web/MobilityFinance.Web.csproj
+            dll: MobilityFinance.Web.dll
+          - image: mobility-finance-origination-api
+            project: src/Services/Origination/MobilityFinance.Origination.Api/MobilityFinance.Origination.Api.csproj
+            dll: MobilityFinance.Origination.Api.dll
+          - image: mobility-finance-ledger-api
+            project: src/Services/Ledger/MobilityFinance.Ledger.Api/MobilityFinance.Ledger.Api.csproj
+            dll: MobilityFinance.Ledger.Api.dll
+          - image: mobility-finance-assets-api
+            project: src/Services/Assets/MobilityFinance.Assets.Api/MobilityFinance.Assets.Api.csproj
+            dll: MobilityFinance.Assets.Api.dll
+          - image: mobility-finance-operations-api
+            project: src/Services/Operations/MobilityFinance.Operations.Api/MobilityFinance.Operations.Api.csproj
+            dll: MobilityFinance.Operations.Api.dll
+          - image: mobility-finance-activation-worker
+            project: src/Workers/Activation/MobilityFinance.Activation.Worker/MobilityFinance.Activation.Worker.csproj
+            dll: MobilityFinance.Activation.Worker.dll
+          - image: mobility-finance-projections-worker
+            project: src/Workers/Projections/MobilityFinance.Projections.Worker/MobilityFinance.Projections.Worker.csproj
+            dll: MobilityFinance.Projections.Worker.dll
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build image in Azure Container Registry
+        run: >-
+          az acr build
+          --registry "${{ vars.AZURE_CONTAINER_REGISTRY }}"
+          --image "${{ matrix.image }}:${{ inputs.imageTag }}"
+          --file deploy/docker/Dockerfile
+          --build-arg "PROJECT_PATH=${{ matrix.project }}"
+          --build-arg "APP_DLL=${{ matrix.dll }}"
+          .
+
+  deploy:
+    needs: build-images
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.18.6
+
+      - name: Connect to AKS
+        run: >-
+          az aks get-credentials
+          --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}"
+          --name "${{ vars.AZURE_AKS_CLUSTER }}"
+          --overwrite-existing
+
+      - name: Resolve platform resources
+        id: platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          registry_server="$(az acr show \
+            --name '${{ vars.AZURE_CONTAINER_REGISTRY }}' \
+            --query loginServer -o tsv)"
+          service_bus="$(az servicebus namespace list \
+            --resource-group '${{ vars.AZURE_RESOURCE_GROUP }}' \
+            --query '[0].serviceBusEndpoint' -o tsv)"
+          workload_client_id="$(az identity list \
+            --resource-group '${{ vars.AZURE_RESOURCE_GROUP }}' \
+            --query "[?contains(name, 'workload')].clientId | [0]" -o tsv)"
+          {
+            echo "registry=${registry_server}"
+            echo "service_bus=${service_bus#https://}"
+            echo "workload_client_id=${workload_client_id}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Deploy chart
+        run: |
+          helm upgrade --install mobility \
+            deploy/helm/mobility-finance \
+            --namespace mobility-finance \
+            --create-namespace \
+            --atomic \
+            --timeout 10m \
+            --set-string image.registry="${{ steps.platform.outputs.registry }}" \
+            --set-string image.tag="${{ inputs.imageTag }}" \
+            --set-string serviceBus.fullyQualifiedNamespace="${{ steps.platform.outputs.service_bus }}" \
+            --set serviceAccount.workloadIdentity.enabled=true \
+            --set-string serviceAccount.workloadIdentity.clientId="${{ steps.platform.outputs.workload_client_id }}" \
+            --set-string serviceAccount.workloadIdentity.tenantId="${{ vars.AZURE_TENANT_ID }}"
+
+      - name: Verify rollout
+        run: >-
+          kubectl rollout status deployment
+          --namespace mobility-finance
+          --selector app.kubernetes.io/part-of=mobility-finance
+          --timeout=10m

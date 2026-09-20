@@ -1,0 +1,97 @@
+name: Publish release images
+
+on:
+  push:
+    tags:
+      - v*
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: mobility-finance-web
+            project: src/Web/MobilityFinance.Web/MobilityFinance.Web.csproj
+            dll: MobilityFinance.Web.dll
+          - image: mobility-finance-origination-api
+            project: src/Services/Origination/MobilityFinance.Origination.Api/MobilityFinance.Origination.Api.csproj
+            dll: MobilityFinance.Origination.Api.dll
+          - image: mobility-finance-ledger-api
+            project: src/Services/Ledger/MobilityFinance.Ledger.Api/MobilityFinance.Ledger.Api.csproj
+            dll: MobilityFinance.Ledger.Api.dll
+          - image: mobility-finance-assets-api
+            project: src/Services/Assets/MobilityFinance.Assets.Api/MobilityFinance.Assets.Api.csproj
+            dll: MobilityFinance.Assets.Api.dll
+          - image: mobility-finance-operations-api
+            project: src/Services/Operations/MobilityFinance.Operations.Api/MobilityFinance.Operations.Api.csproj
+            dll: MobilityFinance.Operations.Api.dll
+          - image: mobility-finance-activation-worker
+            project: src/Workers/Activation/MobilityFinance.Activation.Worker/MobilityFinance.Activation.Worker.csproj
+            dll: MobilityFinance.Activation.Worker.dll
+          - image: mobility-finance-projections-worker
+            project: src/Workers/Projections/MobilityFinance.Projections.Worker/MobilityFinance.Projections.Worker.csproj
+            dll: MobilityFinance.Projections.Worker.dll
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/docker/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ github.ref_name }}
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ github.sha }}
+          build-args: |
+            PROJECT_PATH=${{ matrix.project }}
+            APP_DLL=${{ matrix.dll }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+      - uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+  chart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.18.6
+
+      - name: Package chart
+        run: |
+          mkdir -p artifacts
+          helm package deploy/helm/mobility-finance \
+            --app-version "${GITHUB_REF_NAME#v}" \
+            --version "${GITHUB_REF_NAME#v}" \
+            --destination artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mobility-finance-helm
+          path: artifacts/*.tgz
+          if-no-files-found: error
