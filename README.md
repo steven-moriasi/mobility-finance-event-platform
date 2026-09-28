@@ -55,7 +55,7 @@ no-cloud-deployment truth boundary are documented in
 
 ## Truth boundary
 
-This is an original portfolio project built with synthetic data. It is not affiliated with M-KOPA, does not reproduce any private platform, and does not perform real lending, payment collection, vehicle tracking, or device control.
+This is an original reference implementation built with synthetic data. It does not reproduce any private platform and does not perform real lending, payment collection, vehicle tracking, or device control.
 
 ## License
 

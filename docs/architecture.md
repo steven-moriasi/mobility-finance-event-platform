@@ -378,8 +378,6 @@ Benchmarks distinguish measured local results from unverified production targets
 8. Add Kubernetes, Bicep, and delivery automation.
 9. Run complete quality, security, runtime, and authorship verification.
 
-Each commit represents a meaningful, working increment. Commits are authored and committed as Steven Ongati and pushed directly to `main`.
-
 ## Definition of done
 
 A reviewer can:
@@ -396,10 +394,6 @@ A reviewer can:
 
 ## Public references
 
-- M-KOPA Senior Backend Engineer job description supplied for portfolio analysis
-- https://www.m-kopa.com/mobility
-- https://www.m-kopa.com/about
-- https://jobs.ashbyhq.com/m-kopa/0c398bf1-8bb1-44c6-81c9-b884e300db4b
 - https://learn.microsoft.com/en-us/dotnet/core/releases-and-support
 - https://learn.microsoft.com/en-us/azure/service-bus-messaging/overview-emulator
 - https://learn.microsoft.com/en-us/azure/architecture/patterns/idempotent-consumer
